@@ -2,4 +2,4 @@ React + Vite
  
 # Aviasales App
 
-Приложение [тут](тут будет ссыл)
+Приложение [тут](https://aviasales-test-task.vercel.app/)
