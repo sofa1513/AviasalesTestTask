@@ -1,75 +1,63 @@
+
+
 import styles from './CardTicket.module.scss';
-import {useSelector} from "react-redux";
-import {Spin} from 'antd';
-import {compareValues} from "../../../../helpers/compareValues.js";
-import {useEffect, useState} from "react";
+import { useSelector } from "react-redux";
+import { Spin } from 'antd';
+import { compareValues } from "../../../../helpers/compareValues.js";
+import { useState, useMemo } from "react";
+import { toast } from "react-toastify";
+import { formatDuration, timeInFly } from "../../../../utils/ticketUtils.js";
 
 const CardTicket = () => {
-    let {list, sort, filters} = useSelector(state => state.TicketList);
+    const { list, sort, filters } = useSelector(state => state.TicketList);
 
-    const [listTickets, setListTickets] = useState([]);
     const [cardTickets, setCardTickets] = useState(5);
 
-    useEffect(() => {
-        if (list && list.tickets) {
-            const sortedTickets = sort ? list.tickets.slice(0, cardTickets)
-                                                    .sort(compareValues(sort.key, sort.order)) 
-                                                    : list.tickets.slice(0, cardTickets);
-            setListTickets(sortedTickets);
-        }
-    }, [sort, list]);
+    
+    const listTickets = useMemo(() => {
+        if (!list || !Array.isArray(list)) return [];
 
-    let priceRU = new Intl.NumberFormat("ru-RU", {
+        try {
+            let filteredTickets = list;
+
+            if (filters.length > 0) {
+                filteredTickets = list.filter(ticket =>
+                    ticket.segments.some(segment =>
+                        filters.includes(segment.stops.length)
+                    )
+                );
+            }
+
+            const sortedTickets = sort
+                ? filteredTickets.sort(compareValues(sort.key, sort.order))
+                : filteredTickets;
+
+            return sortedTickets.slice(0, cardTickets);
+        } catch (e) {
+            toast.error(`Ошибка при обработке билетов: ${e.message}`, {
+                position: "bottom-left",
+                autoClose: 6000,
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+            return [];
+        }
+    }, [list, sort, filters, cardTickets]);
+
+    const priceRU = new Intl.NumberFormat("ru-RU", {
         style: "currency",
         currency: "RUB",
     });
-
-    const formatDuration = (min) => {
-        const hours = Math.floor(min / 60);
-        const minutes = min % 60;
-        return hours === 0 ? `${minutes}м` : minutes === 0 ? `${hours}ч` 
-                           : `${hours}ч ${minutes}м`;
-    };
-
-    const timeInFly = (date, duration) => {
-        const dates = new Date(date);
-        const depHours = dates.getHours();
-        const depMinutes = dates.getMinutes();
-        dates.setMinutes(dates.getMinutes() + duration);
-        const arrHours = dates.getHours();
-        const arrMinutes = dates.getMinutes();
-        return `${depHours < 10 ? "0" + depHours : depHours}:
-                ${depMinutes < 10 ? "0" + depMinutes : depMinutes} - 
-                ${arrHours < 10 ? "0" + arrHours : arrHours}:${arrMinutes 
-                < 10 ? "0" + arrMinutes : arrMinutes}`;
-    };
-
-    useEffect(() => {
-        if (list && list.tickets) {
-            if (filters.length > 0) {
-                let arr = [];
-                list.tickets.forEach((el) => {
-                    el.segments.forEach(stops => {
-                        filters.forEach(val => {
-                            if (val !== 5 && stops.stops.length === val) {
-                                arr.push(el);
-                            }
-                        });
-                    });
-                });
-                if (arr.length > 0) setListTickets(arr);
-            } else {
-                setListTickets(list.tickets);
-            }
-        }
-    }, [filters, list, cardTickets]);
 
     return (
         <>
             {list ?
                 <>
-                    {listTickets?.slice(0, cardTickets).map((el, index) => (
-                        <div className={styles.cardTicket} key={index}>
+                    {listTickets.map((el, id) => (
+                        <div className={styles.cardTicket} key={id}>
                             <div className={styles.cardTicketHeader}>
                                 <div className={styles.cardTicketPrice}>{priceRU.format(el.price)}</div>
                                 <div>
