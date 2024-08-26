@@ -1,19 +1,17 @@
 
-
-import styles from './CardTicket.module.scss';
-import { useSelector } from "react-redux";
+import React, { useState, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { Spin } from 'antd';
-import { compareValues } from "../../../../helpers/compareValues.js";
-import { useState, useMemo } from "react";
-import { toast } from "react-toastify";
-import { formatDuration, timeInFly } from "../../../../utils/ticketUtils.js";
+import Ticket from './Ticket';
+import styles from './CardTicket.module.scss';
+import { toast } from 'react-toastify';
+import { compareValues } from '../../../../helpers/compareValues.js';
+
 
 const CardTicket = () => {
     const { list, sort, filters } = useSelector(state => state.TicketList);
-
     const [cardTickets, setCardTickets] = useState(5);
 
-    
     const listTickets = useMemo(() => {
         if (!list || !Array.isArray(list)) return [];
 
@@ -47,68 +45,33 @@ const CardTicket = () => {
         }
     }, [list, sort, filters, cardTickets]);
 
-    const priceRU = new Intl.NumberFormat("ru-RU", {
-        style: "currency",
-        currency: "RUB",
-    });
-
     return (
         <>
-            {list ?
+            {list ? (
                 <>
-                    {listTickets.map((el, id) => (
-                        <div className={styles.cardTicket} key={id}>
-                            <div className={styles.cardTicketHeader}>
-                                <div className={styles.cardTicketPrice}>{priceRU.format(el.price)}</div>
-                                <div>
-                                    <img alt="ticket" src={`https://pics.avs.io/99/36/${el.carrier}.png`} />
-                                </div>
-                            </div>
-
-                            {el.segments.map((value, key) => (
-                                <div className={styles.cardTicketInfo} key={key}>
-                                    <div className={styles.cardTicketInfoDate}>
-                                        <div className={styles.cardTicketInfoDateDay}>
-                                            {value.origin} – {value.destination}
-                                        </div>
-                                        <div className={styles.cardTicketInfoDateTime}>
-                                            {timeInFly(value.date, value.duration)}
-                                        </div>
-                                    </div>
-                                    <div className={styles.cardTicketInfoDate}>
-                                        <div className={styles.cardTicketInfoDateDay}>
-                                            В пути
-                                        </div>
-                                        <div className={styles.cardTicketInfoDateTime}>
-                                            {formatDuration(value.duration)}
-                                        </div>
-                                    </div>
-                                    <div className={styles.cardTicketInfoDate}>
-                                        <div className={styles.cardTicketInfoDateDay}>
-                                            {value.stops.length} пересадки
-                                        </div>
-                                        <div className={styles.cardTicketInfoDateTime}>
-                                            {value.stops.join(", ")}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ))}
+                    {listTickets.length > 0 ? (
+                        listTickets.map((el, id) => (
+                            <Ticket key={id} ticket={el} />
+                        ))
+                    ) : (
+                        <div className={styles.noTickets}>Нет доступных билетов</div>
+                    )}
                     <button className={styles.showTicketButton} onClick={() => {
                         setCardTickets((cT) => cT + 5);
                     }}>
                         Показать еще 5 билетов
                     </button>
-                </> :
+                </>
+            ) : (
                 <div className={styles.cardTicketSpinner}>
                     <Spin tip="Loading" size="large">
                         <div className="content" />
                     </Spin>
                 </div>
-            }
+            )}
         </>
     );
-}
+};
 
 export default CardTicket;
+

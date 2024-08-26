@@ -8,6 +8,9 @@ import styles from './App.module.scss';
 import {useDispatch, useSelector} from "react-redux";
 import {useEffect} from "react";
 import {getSearchApi} from "../../services/TicketList/SearchTicket.js";
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
+
 
 function App() {
     let {filters} = useSelector(state => state.TicketList);
@@ -19,6 +22,7 @@ function App() {
 
     return (
         <>
+        <ToastContainer />
             <img className={styles.appLogo} alt="logo" src={img}/>
             <div className={styles.appWrapper}>
                 <aside>
